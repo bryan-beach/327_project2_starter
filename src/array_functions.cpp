@@ -24,6 +24,9 @@
 
 #include "array_functions.h"
 #include <array>
+#include <iostream>
+#include <fstream>
+#include <algorithm>
 
 struct counter {
 	int occurences = 0;
@@ -97,10 +100,29 @@ bool processFile(std::fstream &myfstream) {
 }
 
 void processLine(std::string &myString) {
-	;
+
+	int i = 0;
+	std::string subString = "";
+
+	while (i < myString.size()) {
+
+		if (myString[i] == ' ') {
+			processToken(subString);
+			subString = "";
+		} else {
+			subString += myString[i];
+		}
+		i++;
+	}
 }
 
 void processToken(std::string &token) {
+
+	char r = '.\r';
+
+	token.erase(std::remove(token.begin(), token.end(), ' '), token.end());
+	token.erase(std::remove(token.begin(), token.end(), '\r'), token.end());
+	token.erase(std::remove(token.begin(), token.end(), r), token.end());
 
 	int i = 0;
 	bool found = false;
@@ -112,6 +134,10 @@ void processToken(std::string &token) {
 		}
 
 		i++;
+	}
+
+	if (token.empty()) {
+		found = true;
 	}
 
 	if (!found) {
@@ -136,6 +162,19 @@ void closeFile(std::fstream& myfile) {
 }
 
 int writeArraytoFile(const std::string &outputfilename) {
+
+	std::ofstream myfile;
+
+	myfile.open (outputfilename);
+
+	for(counter token : wordArray) {
+		myfile << token.word;
+		myfile << " ";
+		myfile << token.occurences;
+		myfile << "\n";
+	}
+
+	myfile.close();
 	return 0;
 }
 
