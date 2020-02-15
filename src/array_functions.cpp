@@ -23,15 +23,28 @@
 //TODO look in utilities.h for useful functions, particularly strip_unwanted_chars!
 
 #include "array_functions.h"
+#include "constants.h"
 #include <array>
 #include <iostream>
 #include <fstream>
 #include <algorithm>
 
 struct counter {
-	int occurences = 0;
+	int occurences = -1;
 	std::string word = "";
 };
+
+bool compareOccurences(counter lhs, counter rhs) {
+	return lhs.occurences > rhs.occurences;
+}
+
+bool compareAscending(counter lhs, counter rhs) {
+	return lhs.word < rhs.word;
+}
+
+bool compareDescending(counter lhs, counter rhs) {
+	return lhs.word > rhs.word;
+}
 
 std::array<counter, 100> wordArray;
 
@@ -51,7 +64,7 @@ void clearArray(){
 			break;
 		}
 
-		wordArray[i].occurences = 0;
+		wordArray[i].occurences = -1;
 		wordArray[i].word = "";
 
 		i++;
@@ -114,21 +127,28 @@ void processLine(std::string &myString) {
 		}
 		i++;
 	}
+
+	processToken(subString);
 }
 
 void processToken(std::string &token) {
 
-	char r = '.\r';
-
 	token.erase(std::remove(token.begin(), token.end(), ' '), token.end());
 	token.erase(std::remove(token.begin(), token.end(), '\r'), token.end());
-	token.erase(std::remove(token.begin(), token.end(), r), token.end());
+	token.erase(std::remove(token.begin(), token.end(), '.'), token.end());
+	token.erase(std::remove(token.begin(), token.end(), ','), token.end());
 
 	int i = 0;
 	bool found = false;
 
 	while (i < nextEmpty) {
-		if (token == wordArray[i].word) {
+		std::string tempA = token;
+		std::string tempB = wordArray[i].word;
+
+		transform(tempA.begin(), tempA.end(), tempA.begin(), ::tolower);
+		transform(tempB.begin(), tempB.end(), tempB.begin(), ::tolower);
+
+		if (tempA == tempB) {
 			wordArray[i].occurences++;
 			found = true;
 		}
@@ -163,9 +183,13 @@ void closeFile(std::fstream& myfile) {
 
 int writeArraytoFile(const std::string &outputfilename) {
 
-	std::ofstream myfile;
+	if (getArraySize() == 0) {
+		return -3;
+	}
 
-	myfile.open (outputfilename);
+	std::ofstream myfile("./output/testdata_full.out");
+
+	//myfile.open (outputfilename);
 
 	for(counter token : wordArray) {
 		myfile << token.word;
@@ -179,6 +203,30 @@ int writeArraytoFile(const std::string &outputfilename) {
 }
 
 void sortArray(constants::sortOrder so) {
-	;
+	switch(so) {
+	case 0:
+		break;
+	case 1:
+		for (int i = 0; i < wordArray.size(); i = i + 1) {
+			if (wordArray[i].word == "") {
+				wordArray[i].word = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz";
+			}
+		}
+
+		std::sort(wordArray.begin(), wordArray.end(), compareAscending);
+
+		for (int i = 0; i < wordArray.size(); i = i + 1) {
+			if (wordArray[i].word == "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz") {
+				wordArray[i].word = "";
+			}
+		}
+		break;
+	case 2:
+		std::sort(wordArray.begin(), wordArray.end(), compareDescending);
+		break;
+	case 3:
+		std::sort(wordArray.begin(), wordArray.end(), compareOccurences);
+		break;
+	}
 }
 
